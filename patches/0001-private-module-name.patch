@@ -1,0 +1,38 @@
+diff --git a/opencv/modules/python/src2/cv2.cpp b/opencv/modules/python/src2/cv2.cpp
+index a7837a6..00c89b2 100644
+--- a/opencv/modules/python/src2/cv2.cpp
++++ b/opencv/modules/python/src2/cv2.cpp
+@@ -1,3 +1,4 @@
++// Texture Extractor modification: private Python module entry point.
+ // must be defined before importing numpy headers
+ // https://numpy.org/doc/1.17/reference/c-api.array.html#importing-the-api
+ #define PY_ARRAY_UNIQUE_SYMBOL opencv_ARRAY_API
+@@ -585,8 +586,8 @@ static struct PyModuleDef cv2_moduledef =
+     special_methods
+ };
+ 
+-PyMODINIT_FUNC PyInit_cv2();
+-PyObject* PyInit_cv2()
++PyMODINIT_FUNC PyInit_tecv2();
++PyObject* PyInit_tecv2()
+ {
+     import_array(); // from numpy
+     PyObject* m = PyModule_Create(&cv2_moduledef);
+diff --git a/opencv/modules/python/src2/cv2.hpp b/opencv/modules/python/src2/cv2.hpp
+index 8cd0c2e..e3de143 100644
+--- a/opencv/modules/python/src2/cv2.hpp
++++ b/opencv/modules/python/src2/cv2.hpp
+@@ -1,3 +1,4 @@
++// Texture Extractor modification: private Python module namespace.
+ #ifndef CV2_HPP
+ #define CV2_HPP
+ 
+@@ -33,7 +34,7 @@
+ #pragma warning(pop)
+ #endif
+ 
+-#define MODULESTR "cv2"
++#define MODULESTR "tecv2"
+ #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+ 
+ #include <numpy/ndarrayobject.h>
