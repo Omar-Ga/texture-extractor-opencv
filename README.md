@@ -33,7 +33,8 @@ The add-on ships one small compiled file per platform: `wheels/texture_extractor
 4. renames the package folder inside the wheel from `cv2` to `tecv2` (compiled files are copied unchanged),
 5. checks that no FFmpeg, video codec or TLS libraries ended up in the wheel,
 6. audits the binary with `abi3audit` for the stable Python ABI used by Blender 4.5 and later,
-7. installs it next to the official `opencv-python-headless` wheel and runs [`smoke_test.py`](smoke_test.py).
+7. installs it next to the official `opencv-python-headless` wheel and runs [`smoke_test.py`](smoke_test.py),
+8. when asked to reproduce a tag, compares the result with that release (see below).
 
 A tagged run publishes the four wheels, their build reports, test logs and `SHA256SUMS.txt` as a [release](../../releases), and signs an attestation for each wheel.
 
@@ -55,9 +56,13 @@ This checks the signature and prints the workflow, commit and run that built the
 - macOS: `shasum -a 256 <wheel>`
 - Linux: `sha256sum <wheel>`
 
-## Building it yourself
+## Reproducing a release
 
-Fork the repository and run the **Build** workflow, or build locally with Python 3.11, git, CMake and a C++ compiler:
+Builds are repeatable: the build date is fixed through `SOURCE_DATE_EPOCH`, and Windows builds use `/Brepro` so the compiler and linker write content hashes instead of timestamps. Rebuilding a tag on the same runner images gives byte-identical files inside every wheel.
+
+To check a release yourself, fork this repository, open **Actions > Build > Run workflow**, and enter the tag (for example `v4.11.0.86+te3`) as **reproduce_tag**. Each platform job rebuilds that tag from source, downloads the published wheel, and runs [`compare.py`](compare.py), which fails unless every file inside the two wheels is byte-identical. The result is in each job's log and in `reproduction.txt` in its artifact.
+
+To build locally instead, with Python 3.11, git, CMake and a C++ compiler:
 
 ```bash
 python -m pip install -r requirements/build.txt
@@ -65,7 +70,7 @@ python build.py --work-dir build --output-dir dist
 python finalize.py dist
 ```
 
-A rebuild uses the same source, patches and settings, but the result is not guaranteed to be byte-identical: compilers embed timestamps and build paths. Compare the build reports (`build-provenance.json`) and the behaviour rather than the hash, or rely on the signed attestation for the published files.
+A local build uses a different compiler and system libraries than the GitHub runners, so expect the same behaviour but not the same bytes.
 
 ## License
 

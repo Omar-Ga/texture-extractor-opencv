@@ -3,6 +3,10 @@
 Downloads the official opencv-python-headless 4.11.0.86 source archive, checks its
 SHA-256, applies the patches in patches/, and builds with the CMake flags below.
 Linux builds must run in the manylinux_2_28 container.
+
+Builds are made repeatable by fixing SOURCE_DATE_EPOCH (16 January 2025), which OpenCV's
+build-information timestamp and the wheel's file dates use, and on Windows by building with
+/Brepro, which replaces the compiler and linker timestamps with content hashes.
 """
 
 import argparse
@@ -46,6 +50,8 @@ CMAKE_FLAGS = [
     "-DBUILD_opencv_videoio=OFF", "-DBUILD_opencv_highgui=OFF",
     "-DOPENCV_ENABLE_NONFREE=OFF", "-DENABLE_PRECOMPILED_HEADERS=OFF",
 ]
+SOURCE_DATE_EPOCH = "1736985600"
+WINDOWS_REPRODUCIBLE_FLAGS = "/Brepro"
 FORBIDDEN_PAYLOAD = ("avcodec", "avformat", "ffmpeg", "x264", "x265", "gnutls", "libssl", "libcrypto")
 
 
@@ -152,7 +158,10 @@ def main():
     extend_notices(source)
     env = os.environ.copy()
     env.update(ENABLE_HEADLESS="1", ENABLE_CONTRIB="0", CMAKE_BUILD_PARALLEL_LEVEL="2",
-               CMAKE_ARGS=" ".join(CMAKE_FLAGS))
+               CMAKE_ARGS=" ".join(CMAKE_FLAGS), SOURCE_DATE_EPOCH=SOURCE_DATE_EPOCH)
+    if sys.platform == "win32":
+        env.update(CFLAGS=WINDOWS_REPRODUCIBLE_FLAGS, CXXFLAGS=WINDOWS_REPRODUCIBLE_FLAGS,
+                   LDFLAGS=WINDOWS_REPRODUCIBLE_FLAGS)
     if sys.platform == "darwin":
         env["MACOSX_DEPLOYMENT_TARGET"] = "13.0"
     raw = work / "raw-wheels"
@@ -176,7 +185,9 @@ def main():
                   distribution="texture-extractor-opencv", import_name=PRIVATE_MODULE,
                   patches={name: sha256((ROOT / "patches" / name).read_bytes().replace(b"\r\n", b"\n")) for name in PATCHES},
                   patched_source_sha256=PATCHED_SHA256,
-                  cmake_flags=CMAKE_FLAGS, platform=platform.platform(), machine=platform.machine(),
+                  cmake_flags=CMAKE_FLAGS, source_date_epoch=SOURCE_DATE_EPOCH,
+                  windows_reproducible_flags=WINDOWS_REPRODUCIBLE_FLAGS if sys.platform == "win32" else None,
+                  platform=platform.platform(), machine=platform.machine(),
                   python=sys.version, ci=ci_context(), wheel=final.name, sha256=sha256(final.read_bytes()))
     (output / "build-provenance.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
