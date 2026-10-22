@@ -10,7 +10,7 @@ The add-on ships one small compiled file per platform: `wheels/texture_extractor
 |---|---|
 | Source | Official [opencv-python-headless 4.11.0.86](https://pypi.org/project/opencv-python-headless/4.11.0.86/) source archive from PyPI |
 | Source SHA-256 | `996eb282ca4b43ec6a3972414de0e2331f5d9cda2b41091a49739c19fb843798` |
-| Changes | Two patch files in [`patches/`](patches/), described below |
+| Changes | Three patch files in [`patches/`](patches/), described below |
 | Modules built | `core`, `imgproc`, `dnn` and the Python bindings |
 | Switched off | Video I/O, FFmpeg, GStreamer, camera access, GUI, image file codecs, OpenCL, IPP, ITT, LAPACK, Eigen, Java, G-API, non-free code |
 | Build settings | The `CMAKE_FLAGS` list in [`build.py`](build.py) |
@@ -18,8 +18,9 @@ The add-on ships one small compiled file per platform: `wheels/texture_extractor
 
 ### The patches
 
-- [`0001-private-module-name.patch`](patches/0001-private-module-name.patch) is the only change to compiled code. It renames the Python module from `cv2` to `tecv2` (two lines), so the add-on never replaces or clashes with a `cv2` that another Blender add-on installs.
+- [`0001-private-module-name.patch`](patches/0001-private-module-name.patch) is the only change to OpenCV's C++ code. It renames the Python module from `cv2` to `tecv2` (two lines), so the add-on never replaces or clashes with a `cv2` that another Blender add-on installs.
 - [`0002-minimal-wheel-packaging.patch`](patches/0002-minimal-wheel-packaging.patch) changes only Python packaging: it stops `setup.py` from looking for files that this minimal build does not produce, marks the wheel as built for Python 3.11 and later, and sets the version to `4.11.0.86+te3`.
+- [`0003-repeatable-build-info.patch`](patches/0003-repeatable-build-info.patch) changes one line of the build-information text that `getBuildInformation()` reports: it leaves out the build machine's kernel version, which varies between GitHub's host machines and would otherwise make rebuilds differ.
 
 `build.py` refuses to build if the source archive or any patched file does not match the SHA-256 recorded in it.
 
@@ -28,7 +29,7 @@ The add-on ships one small compiled file per platform: `wheels/texture_extractor
 [`.github/workflows/build.yml`](.github/workflows/build.yml) runs on GitHub-hosted runners: `manylinux_2_28` (Linux x64), Windows Server 2022 (Windows x64), macOS 15 Intel and macOS 14 Apple Silicon. For each platform it:
 
 1. downloads the source archive and checks its SHA-256,
-2. applies the two patches and checks the result,
+2. applies the three patches and checks the result,
 3. compiles with the flags above,
 4. renames the package folder inside the wheel from `cv2` to `tecv2` (compiled files are copied unchanged),
 5. checks that no FFmpeg, video codec or TLS libraries ended up in the wheel,
@@ -58,7 +59,7 @@ This checks the signature and prints the workflow, commit and run that built the
 
 ## Reproducing a release
 
-Builds are repeatable: the build date is fixed through `SOURCE_DATE_EPOCH`, and Windows builds use `/Brepro` so the compiler and linker write content hashes instead of timestamps. Rebuilding a tag on the same runner images gives byte-identical files inside every wheel.
+Builds are repeatable: the build date is fixed through `SOURCE_DATE_EPOCH`, the build machine's kernel version is left out of the build information, and Windows builds use `/Brepro` so the compiler and linker write content hashes instead of timestamps. Rebuilding a tag on the same runner images gives byte-identical files inside every wheel.
 
 To check a release yourself, fork this repository, open **Actions > Build > Run workflow**, and enter the tag (for example `v4.11.0.86+te3`) as **reproduce_tag**. Each platform job rebuilds that tag from source, downloads the published wheel, and runs [`compare.py`](compare.py), which fails unless every file inside the two wheels is byte-identical. The result is in each job's log and in `reproduction.txt` in its artifact.
 

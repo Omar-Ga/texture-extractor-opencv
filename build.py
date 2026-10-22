@@ -5,7 +5,8 @@ SHA-256, applies the patches in patches/, and builds with the CMake flags below.
 Linux builds must run in the manylinux_2_28 container.
 
 Builds are made repeatable by fixing SOURCE_DATE_EPOCH (16 January 2025), which OpenCV's
-build-information timestamp and the wheel's file dates use, and on Windows by building with
+build-information timestamp and the wheel's file dates use; by leaving the build machine's
+kernel version out of the build information (patch 0003); and on Windows by building with
 /Brepro, which replaces the compiler and linker timestamps with content hashes.
 """
 
@@ -27,11 +28,12 @@ ROOT = Path(__file__).resolve().parent
 SOURCE_URL = "https://files.pythonhosted.org/packages/36/2f/5b2b3ba52c864848885ba988f24b7f105052f68da9ab0e693cc7c25b0b30/opencv-python-headless-4.11.0.86.tar.gz"
 SOURCE_SHA256 = "996eb282ca4b43ec6a3972414de0e2331f5d9cda2b41091a49739c19fb843798"
 VERSION = "4.11.0.86+te3"
-PATCHES = ("0001-private-module-name.patch", "0002-minimal-wheel-packaging.patch")
+PATCHES = ("0001-private-module-name.patch", "0002-minimal-wheel-packaging.patch", "0003-repeatable-build-info.patch")
 PATCHED_SHA256 = {
     "opencv/modules/python/src2/cv2.cpp": "70c3739d5f41aa6d96006661c14af716db95f2bed0f4b6cefd5f1a3e355f8f77",
     "opencv/modules/python/src2/cv2.hpp": "753e77e0781a7c9238510fc264a9f0359082034dbce4120a7d6518360f507465",
     "setup.py": "28e0d45a970428fa07b5152cd99e6717c9da77fa8659df839ce5667b11f05cce",
+    "opencv/CMakeLists.txt": "c161d5c084f5290ae068cab089c48f0175b37f45838513cf7f53d8dcfe970f54",
 }
 PRIVATE_DISTRIBUTION = "texture_extractor_opencv"
 PRIVATE_MODULE = "tecv2"

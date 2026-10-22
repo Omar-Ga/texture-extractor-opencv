@@ -1,0 +1,14 @@
+diff --git a/opencv/CMakeLists.txt b/opencv/CMakeLists.txt
+index e60406f..0a24209 100644
+--- a/opencv/CMakeLists.txt
++++ b/opencv/CMakeLists.txt
+@@ -1211,7 +1211,8 @@ endif()
+ if(OPENCV_TIMESTAMP)
+   status("    Timestamp:"      ${OPENCV_TIMESTAMP})
+ endif()
+-status("    Host:"             ${CMAKE_HOST_SYSTEM_NAME} ${CMAKE_HOST_SYSTEM_VERSION} ${CMAKE_HOST_SYSTEM_PROCESSOR})
++# Texture Extractor modification: omit the host kernel/OS version so rebuilds are byte-identical.
++status("    Host:"             ${CMAKE_HOST_SYSTEM_NAME} ${CMAKE_HOST_SYSTEM_PROCESSOR})
+ if(CMAKE_CROSSCOMPILING)
+   status("    Target:"         ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_VERSION} ${CMAKE_SYSTEM_PROCESSOR})
+ endif()
